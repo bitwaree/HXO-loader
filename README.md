@@ -91,4 +91,4 @@ Game-Dir
 
 
 ## Terms of Distribution
-Please read [DISTRIBUTION.md](https://github.com/bitwaree/HXO-loader/blob/master/README.md) for additional info.
+Please read [DISTRIBUTION.md](https://github.com/bitwaree/HXO-loader/blob/master/DISTRIBUTION.md) for additional info.
