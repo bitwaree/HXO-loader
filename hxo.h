@@ -20,7 +20,22 @@
 //
 //patchelf --add-needed /lib/hxo/hxo_loader.so <executable_target.elf>
 
-#define LIC_STR "HXO-loader Copyright (C) 2024 bitware.\n\n"
+#ifndef VER_STR
+  #define VER_STR "1.0"
+#endif
+
+#ifndef LIC_STR
+  #define LIC_STR "HXO-loader Copyright (C) 2024 bitware.\n\n"
+#endif
+
+#ifndef BANNER_STR
+  #define BANNER_STR "\n\n" \
+                     "          _                   \n" \
+                     "    |_|\\// \\ | _  _. _| _ ._\n" \
+                     "    | |/\\\\_/ |(_)(_|(_|(/_| \n" \
+                     "                      --v%s  \n"
+#endif //BANNER_STR
+
 
 #pragma once
 #include <stdint.h>
@@ -129,8 +144,9 @@ int __attribute__((visibility("hidden"))) fn_ini_handler(void *user, const char 
 
 void __attribute__((visibility("hidden"))) *hxo_loader(void *)
 {
-
+    fprintf(stdout, BANNER_STR, VER_STR);
     fprintf(stdout, LIC_STR);
+
     //Read Config
     struct enternalParam *entParam = malloc(sizeof(struct enternalParam));
     

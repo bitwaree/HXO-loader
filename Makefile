@@ -2,9 +2,10 @@ CC=gcc
 LIBNAME=hxo_loader.so
 FLAGS=
 INSDIR=/usr/lib/hxo/
+VERSION := $(shell cat ./version)
 
 build:
-	$(CC) -c *.c -fPIC
+	$(CC) -c *.c -fPIC -DVER_STR=\"$(VERSION)\"
 	$(CC) -s -o ./bin/$(LIBNAME) *.o -shared
 
 install:
