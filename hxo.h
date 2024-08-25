@@ -18,7 +18,7 @@
 // |_|\// \ | _  _. _| _ ._
 // | |/\\_/ |(_)(_|(_|(/_|
 //
-//patchelf --add-needed /lib/hxo/hxo_loader.so <executable_target.elf>
+//patchelf --add-needed hxo_loader.so <executable_target.elf>
 
 #ifndef VER_STR
   #define VER_STR "1.0"
@@ -35,14 +35,14 @@
                      "    | |/\\\\_/ |(_)(_|(_|(/_| \n" \
                      "                      --v%s  \n"
 #endif //BANNER_STR
-
+#define CPRS_SHOW_ALWAYS
 
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
 #include <pthread.h>
 
-void __attribute__((visibility("hidden"))) *hxo_loader(void *);
+void __attribute__((visibility("hidden"))) *hxo_loader();
 int __attribute__((visibility("hidden"))) GetExePath(char *directory);
 void __attribute__((visibility("hidden"))) fixDIR(char *Dir);
 
@@ -71,6 +71,9 @@ struct iniParam
     //extras
     char ep[256];
     char dl_dir[2048];
+    //misc
+    bool hideBanner;
+    bool hideCPRstring;
 };
 
 struct enternalParam
@@ -133,6 +136,14 @@ int __attribute__((visibility("hidden"))) fn_ini_handler(void *user, const char 
         if(!strcmp(name, "lib"))
             strcpy(cf->dl_dir, value);
     }
+    else if(!strcmp(section, "MISC"))
+    {
+        //misc
+        if(!strcmp(name, "HideBanner"))
+            cf->hideBanner = (bool) atoi(value);
+        if(!strcmp(name, "HideCPRS"))
+            cf->hideCPRstring = (bool) atoi(value);
+    }
     else
     {
         return 0;
@@ -142,11 +153,12 @@ int __attribute__((visibility("hidden"))) fn_ini_handler(void *user, const char 
 }
 
 
-void __attribute__((visibility("hidden"))) *hxo_loader(void *)
+void __attribute__((visibility("hidden"))) *hxo_loader()
 {
+  #ifdef CPRS_SHOW_ALWAYS
     fprintf(stdout, BANNER_STR, VER_STR);
     fprintf(stdout, LIC_STR);
-
+  #endif
     //Read Config
     struct enternalParam *entParam = malloc(sizeof(struct enternalParam));
     
@@ -157,11 +169,14 @@ void __attribute__((visibility("hidden"))) *hxo_loader(void *)
     strcpy(confparam->hxo_dir, "./scripts/");
     strcpy(confparam->ep, "_init_hxo");
     confparam->autoUnload = 0;
+    confparam->hideBanner = 0;
+    confparam->hideCPRstring = 0;
+
 
     
     if(!GetExePath(entParam->exedir))
     {
-        perror("Can't retrive current executable path! Exiting!");
+        perror("[X] ERROR: Can't retrive current executable path! \nExiting now --HXO-loader!");
         free(entParam);
         free(confparam);
         return (void*)1;
@@ -173,7 +188,7 @@ void __attribute__((visibility("hidden"))) *hxo_loader(void *)
     }
 
     if (ini_parse(entParam->iniFile, fn_ini_handler, confparam) < 0) {
-        perror("Can't load 'HXO.ini'\n");
+        perror("[!] WARNING: unable to parse \'HXO.ini\'");
     }
     //exit without ding anythig if config says to
     if(!confparam->Enable)
@@ -188,6 +203,13 @@ void __attribute__((visibility("hidden"))) *hxo_loader(void *)
     //Add a slash to avoid directory issues
     fixDIR(entParam->hxo_dir);
 
+  #ifndef CPRS_SHOW_ALWAYS
+    if(!confparam->hideBanner)
+        fprintf(stdout, BANNER_STR, VER_STR);
+    if(!confparam->hideCPRstring)
+        fprintf(stdout, LIC_STR);
+  #endif //CPRS_SHOW_ALWAYS
+
     // search for lib in the directory as per config
     DIR *dir;
     struct dirent *entry;
@@ -197,7 +219,7 @@ void __attribute__((visibility("hidden"))) *hxo_loader(void *)
     dir = opendir(entParam->hxo_dir);
     if (dir == NULL)
     {
-        perror("[-] Error opening directory");
+        fprintf(stderr, "[X] ERROR: Can't open hxo directory \"%s\".\n", confparam->hxo_dir);
         free(entParam);
         free(confparam);
         return (void*)1;
@@ -238,24 +260,32 @@ void __attribute__((visibility("hidden"))) *hxo_loader(void *)
         dlhandle = dlopen(current_filename, RTLD_LAZY);
         if (!dlhandle)
         {
-            fprintf(stderr, "[-] Error while opening %s: %s\n", current_filename, dlerror());
+            fprintf(stderr, "[!] Error while loading %s: %s\n", current_filename, dlerror());
+            continue;
         }
 
         // Get a pointer to the _init_hxo function
         init_func = dlsym(dlhandle, confparam->ep);
         if (!init_func)
         {
-            fprintf(stderr, "[-] Entrypoint not found in: %s\n", files[i]);
+            fprintf(stderr, "[!] Entrypoint not found in: %s\n", files[i]);
             dlclose(dlhandle);
+            continue;
         }
 
         // Call the _init_hxo function
         void *result = init_func(NULL);
+        //If a non-zero value returned...
+        if((intptr_t)result != 0)
+        {
+            //Print about the error value
+            fprintf(stderr, "[*] \"%s\" returned %ld (%lX).\n", files[i], (int64_t) result, (uintptr_t) result);
+        }
         if((intptr_t)result == -1)
         {
             //Error in library!!!
-            //fprintf(stderr, "[-] %s returned %X\n", files[i], (uintptr_t) -1);
             dlclose(dlhandle);
+            continue;
         }
         if(confparam->autoUnload)
         {

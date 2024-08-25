@@ -1,0 +1,20 @@
+#!/bin/sh
+# Command: hxo-patch
+# This patches the target elf with the help of patchelf
+
+if [ "$#" -eq 0 ]; then
+    echo "Usage: hxo-patch <executable>"
+    exit 1
+fi
+
+#check if already patched....
+ldd "$1" | grep hxo_loader.so > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "It seems the ELF is already patched, no need to patch again."
+    exit 1
+fi
+#backup and patch the elf
+cp "$1" "$1".bak
+patchelf --add-needed hxo_loader.so "$1"
+

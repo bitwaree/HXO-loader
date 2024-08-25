@@ -1,0 +1,24 @@
+#!/bin/sh
+# Command: hxo-rmpatch
+# This patches the target elf with the help of patchelf
+
+if [ "$#" -eq 0 ]; then
+    echo "Usage: hxo-rmpatch <executable>"
+    exit 1
+fi
+
+ldd "$1" | grep hxo_loader.so > /dev/null
+#check if the elf is patched
+if [ $? -ne 0 ]; then
+    echo "It seems the ELF is not yet patched, so not removing the patch."
+    exit 1
+fi
+#check if the backup file exists
+if [ -e "$1".bak ]; then
+    echo "Backup file found... restoring from it."
+    mv "$1".bak "$1"
+else
+    echo "Backup file not found... reverting using patchelf."
+    patchelf --remove-needed hxo_loader.so "$1"
+fi
+

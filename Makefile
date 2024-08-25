@@ -1,18 +1,45 @@
+#Build Script for HXO-loader
+#Copyright (C) 2024 bitware
+#Run "make help" for help statement
+#Checkout README.md for more info
 CC=gcc
 LIBNAME=hxo_loader.so
-FLAGS=
-INSDIR=/usr/lib/hxo/
+CCFLAGS=
+LDFLAGS=
+PREFIX=/usr
 VERSION := $(shell cat ./version)
 
 build:
-	$(CC) -c *.c -fPIC -DVER_STR=\"$(VERSION)\"
-	$(CC) -s -o ./bin/$(LIBNAME) *.o -shared
+	@ $(CC) -c *.c -fPIC -DVER_STR=\"$(VERSION)\" $(FLAGS)
+	@ echo "CC *.c ->>> *.o"
+	@ $(CC) -s -o ./lib/$(LIBNAME) *.o -shared $(LDFLAGS)
+	@ echo "LD *.o ->>> ./lib/$(LIBNAME)"
+	@ echo "\nBuild Successful ....\nRun \"sudo make install\" to Install HXO-loader-v$(VERSION)"
+
 
 install:
-	mkdir -p $(INSDIR)
-	cp ./bin/$(LIBNAME) $(INSDIR)
+	@ #check if it's already build or not
+	@if [ ! -e ./lib/$(LIBNAME) ]; then \
+		echo "\nERROR: HXO-loader isn't compiled and built at first place!!"; \
+		echo "Run \"make\" then re-run \"make install\" for a successful installation.\n"; \
+		exit 1; \
+	fi
+	@ #proceed to the installation process ..
+	cp ./lib/$(LIBNAME) $(PREFIX)/lib/
+	cp ./scripts.sh/hxo-patch $(PREFIX)/bin/hxo-patch
+	cp ./scripts.sh/hxo-rmpatch $(PREFIX)/bin/hxo-rmpatch
+	chmod +x $(PREFIX)/bin/hxo-patch $(PREFIX)/bin/hxo-rmpatch
+	@ echo "\nHXO-loader-v$(VERSION): Successfully installed ..."
 
 uninstall:
-	rm -R $(INSDIR)
+	@ #check if it's already build or not
+	@if [ ! -e $(PREFIX)/lib/$(LIBNAME) ]; then \
+		echo "\nERROR: HXO-loader isn't installed at first place!!\n"; \
+		exit 1; \
+	fi
+	rm $(PREFIX)/lib/$(LIBNAME)
+	rm $(PREFIX)/bin/hxo-patch $(PREFIX)/bin/hxo-rmpatch
+	@ echo "\nSuccessfully uninstalled ..."
 clean:
-	rm *.o bin/*
+	@ rm -v *.o lib/*
+

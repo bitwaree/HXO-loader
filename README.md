@@ -17,11 +17,11 @@ A shared object (.so) auto-injector, particularly made for game hacking/modding 
 
 *for Debian based systems*:
 ```bash
-  apt install gcc make patchelf
+  sudo apt install gcc binutils make patchelf
 ```
 **or, if you are in Arch based systems*:
 ```bash
-  pacman -S gcc make patchelf
+  sudo pacman -S gcc binutils make patchelf
 ```
 #### 2. Clone this repo.
 ```bash
@@ -31,7 +31,7 @@ A shared object (.so) auto-injector, particularly made for game hacking/modding 
 #### 3. Build and install the library.
 ```
   make
-  make install
+  sudo make install
 ```
 
 ## Local Application/Game setup
@@ -62,15 +62,18 @@ Now make sure your modules have a `.hxo` filename extention,(if not: do it manua
 #./scripts/module2.so -> ./scripts/module2.hxo 
 #./scripts/module3.so -> ./scripts/module3.hxo 
 ```
-#### 4. Finally run the game using `LD_PRELOAD` or `patchelf`
+#### 4. Finally run the game using `LD_PRELOAD` or `hxo-patch`
  - For a test/temporary run (recommended for testing):
 ```bash
-  LD_PRELOAD=/usr/lib/hxo/hxo_loader.so ./<elf-executable>
+  LD_PRELOAD=hxo_loader.so ./<elf-executable>
 ```
-- or, patch the elf to load hxo automatically (recommended for finalizing):
+- or, patch the elf to load hxo automatically (recommended for finalizing/distributing):
 ```bash
-  cp <elf-executable> <elf-executable>.bak
-  patchelf --add-needed /usr/lib/hxo/hxo_loader.so  <elf-executable>
+  hxo-patch <elf-executable>
+```
+- NOTE: Patching will change the target file, and it's going to create a backup file with a .bak extention. To remove/revert the patch just run:
+```bash
+  hxo-rmpatch <patched-elf-executable>
 ```
 #### *So the tree should look something like this:*
 ```tree
