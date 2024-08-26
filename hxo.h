@@ -45,6 +45,7 @@
 void __attribute__((visibility("hidden"))) *hxo_loader();
 int __attribute__((visibility("hidden"))) GetExePath(char *directory);
 void __attribute__((visibility("hidden"))) fixDIR(char *Dir);
+void __attribute__((visibility("hidden"))) dircat(char *absolute, char *parent, char *child);
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -183,8 +184,7 @@ void __attribute__((visibility("hidden"))) *hxo_loader()
     }
     else
     {
-        strcpy(entParam->iniFile, entParam->exedir);
-        strcat(entParam->iniFile, CONFIGFILE);
+        dircat(entParam->iniFile, entParam->exedir, CONFIGFILE);
     }
 
     if (ini_parse(entParam->iniFile, fn_ini_handler, confparam) < 0) {
@@ -198,8 +198,7 @@ void __attribute__((visibility("hidden"))) *hxo_loader()
         return (void*)1;
     }
     //setup parameters
-    strcpy(entParam->hxo_dir, entParam->exedir);
-    strcat(entParam->hxo_dir, confparam->hxo_dir);
+    dircat(entParam->hxo_dir, entParam->exedir, confparam->hxo_dir);
     //Add a slash to avoid directory issues
     fixDIR(entParam->hxo_dir);
 
@@ -255,8 +254,7 @@ void __attribute__((visibility("hidden"))) *hxo_loader()
     {
         dlhandle = NULL;
         // Load the shared object file
-        strcpy(current_filename, entParam->hxo_dir);
-        strcat(current_filename, files[i]);
+        dircat(current_filename, entParam->hxo_dir, files[i]);
         dlhandle = dlopen(current_filename, RTLD_LAZY);
         if (!dlhandle)
         {
@@ -342,5 +340,20 @@ void __attribute__((visibility("hidden"))) fixDIR(char *Dir)
     {
         Dir[tmp_length] = '/';
         Dir[tmp_length+1] = '\0';
+    }
+}
+
+void __attribute__((visibility("hidden"))) dircat(char *absolute, char *parent, char *child)
+{
+    //If child starts with a "/" take it as a absolute directory
+    if(child[0] == '/') {
+        //treat child as an absolute path
+        strcpy(absolute, child);
+    }
+    else {
+        //copy the parent directory first
+        strcpy(absolute, parent);
+        fixDIR(absolute);           //add a slash (/) is not already exists
+        strcat(absolute, child);    //concat child
     }
 }
