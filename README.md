@@ -62,18 +62,14 @@ Now make sure your modules have a `.hxo` filename extention,(if not: do it manua
 #./scripts/module2.so -> ./scripts/module2.hxo 
 #./scripts/module3.so -> ./scripts/module3.hxo 
 ```
-#### 4. Finally run the game using `LD_PRELOAD` or `hxo-patch`
+#### 4. Finally run the game using `hxo-run` or `hxo-patch`
  - For a test/temporary run (recommended for testing):
 ```bash
-  LD_PRELOAD=hxo_loader.so ./<elf-executable>
+  hxo-run ./<elf-executable>
 ```
 - or, patch the elf to load hxo automatically (recommended for finalizing/distributing):
 ```bash
   hxo-patch <elf-executable>
-```
-- NOTE: Patching will change the target file, and it's going to create a backup file with a .bak extention. To remove/revert the patch just run:
-```bash
-  hxo-rmpatch <patched-elf-executable>
 ```
 #### *So the tree should look something like this:*
 ```tree
@@ -86,6 +82,11 @@ Game-Dir
 │   └── hack2.hxo
 └──...
 ```
+- NOTE: Patching will change the target file, and it's going to create a backup file with a .bak extention. To remove/revert the patch just run:
+```bash
+  hxo-rmpatch <patched-elf-executable>
+```
+
 ## Acknowledgements
 
  - [INIh](https://github.com/benhoyt/inih), an awesome INI file parser by Ben Hoyt, used in this project for configuration parsing.

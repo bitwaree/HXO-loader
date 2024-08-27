@@ -277,7 +277,7 @@ void __attribute__((visibility("hidden"))) *hxo_loader()
         if((intptr_t)result != 0)
         {
             //Print about the error value
-            fprintf(stderr, "[*] \"%s\" returned %ld (%lX).\n", files[i], (int64_t) result, (uintptr_t) result);
+            fprintf(stderr, "[*] \"%s\" returned %ld (0x%lX).\n", files[i], (int64_t) result, (uintptr_t) result);
         }
         if((intptr_t)result == -1)
         {
