@@ -12,9 +12,9 @@ ldd "$1" | grep hxo_loader.so > /dev/null
 
 if [ $? -eq 0 ]; then
     #already patched so run normally
-    $1
+    $@
     exit 1
 fi
 #in case not patched already execute the elf with the help of LD_PRELOAD
 export LD_PRELOAD=hxo_loader.so
-$1
+$@
