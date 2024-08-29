@@ -15,11 +15,29 @@
 
 #include "hxo.h"
 
+static int callnum = 0;
+
+__attribute__((constructor)) void hxo_init()
+{
+    //loader code start
+    if(!callnum)
+    {
+        callnum = ~callnum;
+        pthread_attr_t ptattr;
+        size_t _stacksize = 4 * 1024 * 1024; // 4MB stack size
+
+        pthread_attr_init(&ptattr);
+        pthread_attr_setstacksize(&ptattr, _stacksize);
+        pthread_t loader_thread;
+        pthread_create(&loader_thread, &ptattr, (void*(*)(void*))hxo_loader, 0);
+    }
+    //loader code end
+}
+
 //function to be intercepted
 void *memset(void *s, int c, size_t n)
 {
     //loader code start
-    static int callnum = 0;
     if(!callnum)
     {
         callnum = ~callnum;
