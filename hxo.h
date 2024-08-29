@@ -60,29 +60,32 @@ void __attribute__((visibility("hidden"))) dircat(char *absolute, char *parent, 
 // Defined constants
 #define MAX_LIBS 100
 #define FILE_EXT ".hxo"
-#define FILE_DIR "./scripts/"
+
+#define DEFAULT_HXO_DIR "./scripts/"
+#define DEFAULT_LIB_DIR "/usr/lib"
 #define CONFIGFILE "HXO.ini"
 
 struct iniParam
 {
-    bool Enable;
-    char hxo_dir[2048];
-    int sleep;
-    bool autoUnload;
+    bool Enable;          //Enables hxo_loader
+    char hxo_dir[2048];   //Child directory name (where .hxo files stays)
+    int sleep;            //Sleep timer in seconds
+    bool autoUnload;      //Unloads hxo files after execution
     //extras
-    char ep[256];
-    char dl_dir[2048];
+    char ep[256];         //Entrypoint name
+    char dl_dir[2048];    //where hxo_loader stays
     //misc
-    bool hideBanner;
-    bool hideCPRstring;
+    bool hideBanner;      //Hide banner text
+    bool hideCPRstring;   //Hide Copyright String
 };
 
 struct enternalParam
 {
-    char exedir[2048];
-    char cwd[2048];
-    char iniFile[2048];
-    char hxo_dir[2048];
+    char exedir[2048];    //(Absolute path) Where elf executable stays
+    char cwd[2048];       //(Absolute path) Where elf was executed
+    char ini_dir[2048];   //(Absolute path) Where INI file was loaded (parent directory for hxo_dir) (Absolute Path)
+    char iniFile[2048];   //(Absolute path) Path of iniFile 
+    char hxo_dir[2048];   //(Absolute path) Where .hxo files lives 
 };
 /*
 ;INI struct
@@ -166,30 +169,77 @@ void __attribute__((visibility("hidden"))) *hxo_loader()
     struct iniParam *confparam = malloc(sizeof(struct iniParam));
     confparam->Enable = 1;
     confparam->sleep = 0;
-    strcpy(confparam->dl_dir, "/usr/lib/hxo");
-    strcpy(confparam->hxo_dir, "./scripts/");
+    strcpy(confparam->dl_dir, DEFAULT_LIB_DIR);
+    strcpy(confparam->hxo_dir, DEFAULT_HXO_DIR);
     strcpy(confparam->ep, "_init_hxo");
     confparam->autoUnload = 0;
     confparam->hideBanner = 0;
     confparam->hideCPRstring = 0;
 
 
-    
+    // fetch current working directory
+    if (getcwd(entParam->cwd, 2048) == NULL) 
+    {
+        perror("[!] WARNING: Can't retrive current working directory!");
+        *entParam->cwd = (unsigned char) 0;
+    }
+    //fetch exe path
     if(!GetExePath(entParam->exedir))
     {
-        perror("[X] ERROR: Can't retrive current executable path! \nExiting now --HXO-loader!");
+        perror("[X] ERROR: Can't retrive current executable path! \n");
+        *entParam->exedir = (unsigned char) 0;
+    }
+
+    //INI persing priority:
+    //FIRST: look for current woking directory
+    //SEC:   look for Executable path
+    if(*entParam->cwd == 0 && *entParam->exedir==0)
+    {
+      _exit_at_init:
+        //If nothing found... (atleast one is needed to continue)
         free(entParam);
         free(confparam);
         return (void*)1;
     }
-    else
+
+    if(*entParam->cwd != 0)
+    {
+        dircat(entParam->iniFile, entParam->cwd, CONFIGFILE);
+        if(!(ini_parse(entParam->iniFile, fn_ini_handler, confparam) < 0))
+        {
+            //Successfully parsed ini from current working directory
+            strcpy(entParam->ini_dir, entParam->cwd);
+            fixDIR(entParam->ini_dir);
+            goto after_parsing;
+        }
+    }
+    
+    if (*entParam->exedir != 0) 
     {
         dircat(entParam->iniFile, entParam->exedir, CONFIGFILE);
+        if(!(ini_parse(entParam->iniFile, fn_ini_handler, confparam) < 0))
+        {
+            //Successfully parsed ini from executable directory
+            strcpy(entParam->ini_dir, entParam->exedir);
+            fixDIR(entParam->ini_dir);
+            goto after_parsing;
+        }
+        else
+        {
+            //Assume all parameter as per default values
+            perror("[!] WARNING: unable to parse \'HXO.ini\'");
+            strcpy(entParam->ini_dir, entParam->exedir);
+            fixDIR(entParam->ini_dir);
+            goto after_parsing;
+        }
+    }
+    else
+    {
+        goto _exit_at_init;
     }
 
-    if (ini_parse(entParam->iniFile, fn_ini_handler, confparam) < 0) {
-        perror("[!] WARNING: unable to parse \'HXO.ini\'");
-    }
+  after_parsing:
+
     //exit without ding anythig if config says to
     if(!confparam->Enable)
     {
@@ -198,7 +248,7 @@ void __attribute__((visibility("hidden"))) *hxo_loader()
         return (void*)1;
     }
     //setup parameters
-    dircat(entParam->hxo_dir, entParam->exedir, confparam->hxo_dir);
+    dircat(entParam->hxo_dir, entParam->ini_dir, confparam->hxo_dir);
     //Add a slash to avoid directory issues
     fixDIR(entParam->hxo_dir);
 
