@@ -17,46 +17,16 @@
 //       _
 // |_|\// \ | _  _. _| _ ._
 // | |/\\_/ |(_)(_|(_|(/_|
-//
-//patchelf --add-needed hxo_loader.so <executable_target.elf>
 
-#ifndef VER_STR
-  #define VER_STR "1.0"
-#endif
+//hxo.c: contains main code responsible for so loading
 
-#ifndef LIC_STR
-  #define LIC_STR "HXO-loader Copyright (C) 2024 bitware.\n\n"
-#endif
-
-#ifndef BANNER_STR
-  #define BANNER_STR "\n\n" \
-                     "          _                   \n" \
-                     "    |_|\\// \\ | _  _. _| _ ._\n" \
-                     "    | |/\\\\_/ |(_)(_|(_|(/_| \n" \
-                     "                      --v%s  \n"
-#endif //BANNER_STR
-#define CPRS_SHOW_ALWAYS
-
-#pragma once
-#include <stdint.h>
-#include <stdbool.h>
-#include <pthread.h>
-
-void __attribute__((visibility("hidden"))) *hxo_loader();
-int __attribute__((visibility("hidden"))) GetExePath(char *directory);
-void __attribute__((visibility("hidden"))) fixDIR(char *Dir);
-void __attribute__((visibility("hidden"))) dircat(char *absolute, char *parent, char *child);
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include "hxo.h"
 #include <string.h>
-#include <dirent.h>
 #include <dlfcn.h>
+#include <dirent.h>
 //#include "loader.h"
 #include "ini.h"
-#include <libgen.h>
-
+#include "utils.h"
 // Defined constants
 #define MAX_LIBS 100
 #define FILE_EXT ".hxo"
@@ -159,10 +129,10 @@ int __attribute__((visibility("hidden"))) fn_ini_handler(void *user, const char 
 
 void __attribute__((visibility("hidden"))) *hxo_loader()
 {
-  #ifdef CPRS_SHOW_ALWAYS
+#ifdef CPRS_SHOW_ALWAYS
     fprintf(stdout, BANNER_STR, VER_STR);
     fprintf(stdout, LIC_STR);
-  #endif
+#endif
     //Read Config
     struct enternalParam *entParam = malloc(sizeof(struct enternalParam));
     
@@ -252,12 +222,12 @@ void __attribute__((visibility("hidden"))) *hxo_loader()
     //Add a slash to avoid directory issues
     fixDIR(entParam->hxo_dir);
 
-  #ifndef CPRS_SHOW_ALWAYS
+#ifndef CPRS_SHOW_ALWAYS
     if(!confparam->hideBanner)
         fprintf(stdout, BANNER_STR, VER_STR);
     if(!confparam->hideCPRstring)
         fprintf(stdout, LIC_STR);
-  #endif //CPRS_SHOW_ALWAYS
+#endif //CPRS_SHOW_ALWAYS
 
     // search for lib in the directory as per config
     DIR *dir;
@@ -353,57 +323,4 @@ void __attribute__((visibility("hidden"))) *hxo_loader()
     free(entParam);
     // exit
     return (void*)0;
-}
-
-int __attribute__((visibility("hidden"))) GetExePath(char *directory)
-{
-    static const uint MAX_LENGTH = 1024;
-    char *exepath = (char *)malloc(MAX_LENGTH);
-    char *dir;
-    ssize_t len = readlink("/proc/self/exe", exepath, MAX_LENGTH - 1);
-    if (len != -1)
-    {
-        exepath[len] = '\0';
-        // printf("exe path: %s\n", exepath);
-        dir = dirname(exepath);
-        // printf("Current directory: %s\n", dir);
-        strcpy(directory, dir);
-        size_t dirlen = strlen(dir);
-        directory[dirlen] = '/';
-        directory[dirlen + 1] = '\0';
-        dirlen++;
-    }
-    else
-    {
-        perror("readlink() error: can't fetch exe path");
-        free(exepath);
-        return 0;
-    }
-    free(exepath);
-    return 1;
-}
-
-void __attribute__((visibility("hidden"))) fixDIR(char *Dir)
-{
-    size_t tmp_length = strlen(Dir);
-    if(Dir[tmp_length-1] != '/')
-    {
-        Dir[tmp_length] = '/';
-        Dir[tmp_length+1] = '\0';
-    }
-}
-
-void __attribute__((visibility("hidden"))) dircat(char *absolute, char *parent, char *child)
-{
-    //If child starts with a "/" take it as a absolute directory
-    if(child[0] == '/') {
-        //treat child as an absolute path
-        strcpy(absolute, child);
-    }
-    else {
-        //copy the parent directory first
-        strcpy(absolute, parent);
-        fixDIR(absolute);           //add a slash (/) is not already exists
-        strcat(absolute, child);    //concat child
-    }
 }

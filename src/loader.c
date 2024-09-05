@@ -12,6 +12,7 @@
 */
 /*-----------(END OF LICENSE NOTICE)-----------*/
 
+//loader.c: loader code, initializes HXO-loader
 
 #include "hxo.h"
 

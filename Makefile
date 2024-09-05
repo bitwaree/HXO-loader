@@ -10,7 +10,7 @@ PREFIX=/usr
 VERSION := $(shell cat ./version)
 
 build:
-	@ $(CC) -c *.c -fPIC -DVER_STR=\"$(VERSION)\" $(FLAGS)
+	@ $(CC) -c src/*.c -fPIC -DVER_STR=\"$(VERSION)\" $(CCFLAGS)
 	@ echo "CC *.c ->>> *.o"
 	@ $(CC) -s -o ./lib/$(LIBNAME) *.o -shared $(LDFLAGS)
 	@ echo "LD *.o ->>> ./lib/$(LIBNAME)"
