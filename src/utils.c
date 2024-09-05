@@ -14,8 +14,8 @@
 
 //utils.c: Provides additional utilities for hxo-loader to work properly
 
-// #include <sys/types.h>
-// #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <libgen.h>
 #include <stdio.h>
@@ -24,8 +24,29 @@
 #include <string.h>
 #include "utils.h"
 
+#ifdef __bsd__
+    #include <sys/sysctl.h>
+#endif
+
 int __attribute__((visibility("hidden"))) GetExePath(char *directory)
 {
+#ifdef __bsd__
+    //exe path fetch for BSD
+    size_t path_size = 2048; //default size of directory struct
+    int mib[4];
+
+    // Define the MIB array for fetching the executable path
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PATHNAME;
+    mib[3] = getpid();
+
+    // Retrieve the executable path
+    if (sysctl(mib, 4, directory, &path_size, NULL, 0) == -1) {
+        //perror("sysctl");
+        return 0;
+    }
+#else
     //exe path fetch for linux
     static const uint MAX_LENGTH = 1024;
     char *exepath = (char *)malloc(MAX_LENGTH);
@@ -50,6 +71,7 @@ int __attribute__((visibility("hidden"))) GetExePath(char *directory)
         return 0;
     }
     free(exepath);
+#endif
     return 1;
 }
 
@@ -77,3 +99,142 @@ void __attribute__((visibility("hidden"))) dircat(char *absolute, char *parent, 
         strcat(absolute, child);    //concat child
     }
 }
+
+int __attribute__((visibility("hidden"))) dirExists(const char *path) {
+    struct stat info;
+
+    // Use stat to get information about the path
+    if (stat(path, &info) != 0) {
+        // Error in accessing the path (e.g., it doesn't exist)
+        return 0;
+    } else if (info.st_mode & S_IFDIR) {
+        // S_IFDIR bit is set, meaning it's a directory
+        return 1;
+    } else {
+        // The path exists, but it's not a directory
+        return 0;
+    }
+}
+int __attribute__((visibility("hidden"))) fileExists(const char *filepath) {
+
+    // Use fopen to create a handle at path
+    FILE *fp = fopen(filepath, "r");
+    if (!fp) {
+        // Error in accessing the file (e.g., it doesn't exist)
+        return 0;
+    } else {
+        // The path exists, but it's not a directory
+        fclose(fp);
+        return 1;
+    }
+}
+
+int __attribute__((visibility("hidden"))) CopyFile(char *source_file, char *destination_file) {
+    FILE *source = fopen(source_file, "rb");
+    if (source == NULL) {
+        fprintf(stderr, "[!] CopyFile failed: Could not open source file '%s'\n", source_file);
+        return 1;
+    }
+
+    FILE *destination = fopen(destination_file, "wb");
+    if (destination == NULL) {
+        fprintf(stderr, "[!] CopyFile failed: Could not open destination file '%s'\n", destination_file);
+        fclose(source);
+        return 1;
+    }
+
+    char buffer[1024];
+    size_t bytes_read;
+
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), source)) > 0) {
+        if (fwrite(buffer, 1, bytes_read, destination) != bytes_read) {
+            fprintf(stderr, "[!] CopyFile failed: Error writing to destination file '%s'\n", destination_file);
+            fclose(source);
+            fclose(destination);
+            return 1;
+        }
+    }
+
+    if (ferror(source)) {
+        fprintf(stderr, "[!] CopyFile failed: Error reading from source file '%s'\n", source_file);
+        fclose(source);
+        fclose(destination);
+        return 1;
+    }
+
+    fclose(source);
+    fclose(destination);
+
+    return 0;
+}
+
+#ifdef __ANDROID__
+int __attribute__((visibility("hidden"))) getAppID(char *_ID)
+{
+    // Open the /proc/self/cmdline file
+    FILE *f = fopen("/proc/self/cmdline", "r");
+    if (f == NULL) {
+        perror("Failed to open /proc/self/cmdline");
+        return 1;
+    }
+
+    // Read the content of the file
+    if (fgets(_ID, 512, f) != NULL) {
+        // The package name is stored at the start of the file
+    } else {
+        perror("Failed to read package name");
+        fclose(f);
+        return 1;
+    }
+
+    // Close the file
+    fclose(f);
+    return 0;
+}
+int __attribute__((visibility("hidden"))) LogOutput()
+{
+    
+    char _debugAppID[512];
+    getAppID(_debugAppID);
+
+    char outLogFile[1024];
+    strcpy(outLogFile, _LOG_DIR);
+    strcat(outLogFile, _debugAppID);
+    fixDIR(outLogFile);
+
+    strcat(outLogFile, "hxo_log.txt");
+    
+    /* Method 1 : Failed at test
+    if ( !freopen(outLogFile, "a", stdout) &&
+        !freopen(outLogFile, "a", stderr) )
+    {
+        return 0;
+    }
+    */
+
+    //Method 2: ????
+    int out_fd = open(outLogFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
+    if (out_fd == -1) {
+        perror("Failed to open file");
+        return 0;
+    }
+
+    // Duplicate the file descriptor to stdout and stderr
+    if (dup2(out_fd, STDOUT_FILENO) == -1) {
+        perror("Failed to redirect stdout");
+        return 0;
+    }
+
+    if (dup2(out_fd, STDERR_FILENO) == -1) {
+        perror("Failed to redirect stderr");
+        return 0;
+    }
+
+    printf("\n\n\n---------->START LOG<----------\n\n");
+    // Close the original file descriptors
+    //close(out_fd);
+    
+    return out_fd;
+}
+#endif //__ANDROID__
