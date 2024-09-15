@@ -12,7 +12,7 @@ VERSION := $(shell cat ../version)
 build:
 	@ $(CC) -c ../src/*.c -fPIC -DVER_STR=\"$(VERSION)-bsd\" -D__bsd__ $(CCFLAGS)
 	@ echo "CC *.c ->>> *.o"
-	@ $(CC) -s -o ../lib/$(LIBNAME) *.o -shared $(LDFLAGS)
+	@ $(CC) -s -o ../lib/$(LIBNAME) *.o -shared $(LDFLAGS) -lpthread
 	@ echo "LD *.o ->>> ../lib/$(LIBNAME)"
 	@ echo "\nBuild Successful ....\nRun \"sudo make install\" to Install HXO-loader-v$(VERSION)"
 
