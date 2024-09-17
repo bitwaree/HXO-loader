@@ -1,5 +1,5 @@
 
-# HXO-loader
+# HXO-loader: Hybrid Xpl0it loader
 
 A shared object (.so) auto-injector, particularly made for game hacking/modding in mind.
  
@@ -10,9 +10,10 @@ A shared object (.so) auto-injector, particularly made for game hacking/modding 
 - Automatically injects target shared object modules.
 - Tweakable settings for effective module injection.
 - Works on every linux system.
+- Latest versions support Android, BSD systems too.
 
 ## Installation
-
+### For _Linux_ systems: 
 #### 1. First of all, install the required dependencies.
 
 *for Debian based systems*:
@@ -33,6 +34,26 @@ A shared object (.so) auto-injector, particularly made for game hacking/modding 
   make
   sudo make install
 ```
+### For _BSD_ systems:
+#### 1. First of all, install the required dependencies.
+
+```bash
+  sudo pkg install gcc binutils make patchelf
+```
+#### 2. Clone this repo.
+```bash
+  git clone https://github.com/bitwaree/HXO-loader.git
+  cd HXO-loader/bsd
+```
+#### 3. Build and install the library.
+```
+  make
+  sudo make install
+```
+### For _Android_ apps:
+_Android is not as streight forward as other unix systems because of it's complicated security measures. The android version is made in such way so that the users won't have to **root their devices** in order to use it._
+
+But to achieve this, one has to modify the apk/xapk itself. The detailed instructions can be found [here](./android/Guide-for-Android.md).
 
 ## Local Application/Game setup
 #### 1. Goto the directory you have your target game executable(s).
