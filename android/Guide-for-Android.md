@@ -19,15 +19,13 @@ Now as we got the basic difference covered, next we will try to understand the b
 
 #### In an **APK** package there are:
 1. Compiled Java Dex files, 
-3. *___Native Libs___,
+3. ___*Native Libs___,
 3. Resources.
-And we are interested in the *__Native Libs__ here. Those can be found at `<package.apk>/lib/<arch>/...` _(<arch> is the corresponding architecture.)_
+
+And we are interested in the __*Native Libs__ here. Those can be found at `<package.apk>/lib/<arch>/...` _(<arch> is the corresponding architecture.)_
 
 #### The Idea:
 We are going to choose a library inside of the _native lib directory_ and add a dependency to `libhxo.so` using `patchelf`. Next, we are going to put a copy of `"libhxo.so"` in that directory. This way when we run the app the library will tell the linker to load the `libhxo.so` first and HXO-loader will be initialized.
-
-Additional steps:
-- Signing the apk.
 
 ## Step by Step guide of modding:
 
@@ -44,7 +42,7 @@ _(You can mod directly from android too using [Termux](https://termux.dev/en/), 
 ```
 and, setup a command alias for easily accessing it:
 ```bash
-  alias apktool="java -jar $(PWD)/apktool.jar"
+  alias apktool="java -jar $(pwd)/apktool.jar"
 ```
 NOTE: command alias(s) are not permanent, so you have to execute the last command everytime you want to use apktool.
 
