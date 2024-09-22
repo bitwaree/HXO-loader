@@ -32,7 +32,7 @@ int __attribute__((visibility("hidden"))) GetExePath(char *directory)
 {
 #ifdef __bsd__
     //exe path fetch for BSD
-    size_t path_size = 2048; //default size of directory struct
+    size_t path_size = HXO_MAX_PATH_LEN; //default size of directory struct
     int mib[4];
 
     // Define the MIB array for fetching the executable path
@@ -48,7 +48,7 @@ int __attribute__((visibility("hidden"))) GetExePath(char *directory)
     }
 #else
     //exe path fetch for linux
-    static const uint MAX_LENGTH = 1024;
+    static const uint MAX_LENGTH = HXO_MAX_PATH_LEN;
     char *exepath = (char *)malloc(MAX_LENGTH);
     char *dir;
     ssize_t len = readlink("/proc/self/exe", exepath, MAX_LENGTH - 1);
@@ -197,7 +197,7 @@ int __attribute__((visibility("hidden"))) LogOutput()
     char _debugAppID[512];
     getAppID(_debugAppID);
 
-    char outLogFile[1024];
+    char outLogFile[HXO_MAX_PATH_LEN];
     strcpy(outLogFile, _LOG_DIR);
     strcat(outLogFile, _debugAppID);
     fixDIR(outLogFile);

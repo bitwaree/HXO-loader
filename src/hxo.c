@@ -36,12 +36,12 @@
 struct iniParam
 {
     bool Enable;          //Enables hxo_loader
-    char hxo_dir[2048];   //Child directory name (where .hxo files stays)
+    char hxo_dir[HXO_MAX_PATH_LEN];   //Child directory name (where .hxo files stays)
     int sleep;            //Sleep timer in seconds
     bool autoUnload;      //Unloads hxo files after execution
     //extras
     char ep[256];         //Entrypoint name
-    char dl_dir[2048];    //where hxo_loader stays
+    char dl_dir[HXO_MAX_PATH_LEN];    //where hxo_loader stays
     //misc
     bool hideBanner;      //Hide banner text
     bool hideCPRstring;   //Hide Copyright String
@@ -49,11 +49,11 @@ struct iniParam
 
 struct internalParam
 {
-    char exedir[2048];    //(Absolute path) Where elf executable stays
-    char cwd[2048];       //(Absolute path) Where elf was executed
-    char ini_dir[2048];   //(Absolute path) Where INI file was loaded (parent directory for hxo_dir) (Absolute Path)
-    char iniFile[2048];   //(Absolute path) Path of iniFile 
-    char hxo_dir[2048];   //(Absolute path) Where .hxo files lives 
+    char exedir[HXO_MAX_PATH_LEN];    //(Absolute path) Where elf executable stays
+    char cwd[HXO_MAX_PATH_LEN];       //(Absolute path) Where elf was executed
+    char ini_dir[HXO_MAX_PATH_LEN];   //(Absolute path) Where INI file was loaded (parent directory for hxo_dir) (Absolute Path)
+    char iniFile[HXO_MAX_PATH_LEN];   //(Absolute path) Path of iniFile 
+    char hxo_dir[HXO_MAX_PATH_LEN];   //(Absolute path) Where .hxo files lives 
 };
 
 #ifdef __ANDROID__
@@ -65,9 +65,15 @@ struct AndroidParam
 };
 #endif
 
-#define MAX_LIBS 100                //Set maximum num of hxo file injectable
 #define FILE_EXT ".hxo"
-
+struct HXOParam {
+    const char *hxo_version; //The hxo version string
+    char *moduleName;        //The hxo module's file name 
+    char baseName[512];      //Containing the elf executable name
+                             //or, In case of Android: The APP ID
+    char basePath[4096];         //elf executable path
+    char modulePath[4096];       //the hxo module's absolute path
+};
 /*
 ;INI struct
 [HXO]
@@ -169,7 +175,7 @@ int out_fd = 0;
 
 
     // fetch current working directory
-    if (getcwd(entParam->cwd, 2048) == NULL) 
+    if (getcwd(entParam->cwd, HXO_MAX_PATH_LEN) == NULL) 
     {
         perror("[!] WARNING: Can't retrive current working directory!");
         *entParam->cwd = (unsigned char) 0;
@@ -280,7 +286,7 @@ int out_fd = 0;
 
     closedir(dir);
 
-    char current_filename[2048];
+    char current_filename[HXO_MAX_PATH_LEN];
     void *dlhandle;
     void *(*init_func)(void *);
 #else //IN CASE OF ANDROID
@@ -325,7 +331,7 @@ int out_fd = 0;
     fixDIR(entParam->ini_dir);
     dircat(entParam->iniFile, entParam->ini_dir, CONFIGFILE);
     
-    
+    //Create a directory in AndroidParam->AndroidDataPath 
     if(!dirExists(androidParam->AndroidDataPath))
     {
         if (mkdir(androidParam->AndroidDataPath, 0770) == -1)
@@ -366,7 +372,7 @@ int out_fd = 0;
     }
   after_parsing:
 
-    //exit without ding anythig if config says to
+    //exit without doing anything if config says to
     if(!confparam->Enable)
     {
         free(entParam);
@@ -379,15 +385,6 @@ int out_fd = 0;
     #endif
         return (void*)1;
     }
-    //setup parameters
-    //HXO Priority of searching for 
-    dircat(entParam->hxo_dir, androidParam->AndroidDataPath, confparam->hxo_dir);
-    char new_hxo_dir[512];
-    dircat(new_hxo_dir, androidParam->rootDataPath, "cache/hxo/");
-    //Add a slash to avoid directory issues
-    fixDIR(entParam->hxo_dir);
-    fixDIR(new_hxo_dir);
-    
 
 #ifndef CPRS_SHOW_ALWAYS
     if(!confparam->hideBanner)
@@ -396,7 +393,18 @@ int out_fd = 0;
         fprintf(stdout, LIC_STR);
 #endif //CPRS_SHOW_ALWAYS
 
-    // search for lib in the directory as per config
+
+    //setup parameters
+    //HXO Priority of searching for 
+    dircat(entParam->hxo_dir, androidParam->AndroidDataPath, confparam->hxo_dir);
+    char new_hxo_dir[1024];
+    dircat(new_hxo_dir, androidParam->rootDataPath, "cache/hxo/");
+    //Add a slash to avoid directory issues
+    fixDIR(entParam->hxo_dir);
+    fixDIR(new_hxo_dir);
+    
+
+    // search for hxo modules in the directory as per config
     DIR *dir;
     struct dirent *entry;
     char *files[MAX_LIBS]; // Assuming a maximum number of files
@@ -433,12 +441,12 @@ int out_fd = 0;
     closedir(dir);
 
     // proceed to copy files to the rootDataPath/cache/hxo/
-    char current_filename[2048];
+    char current_filename[HXO_MAX_PATH_LEN];
     void *dlhandle;
     void *(*init_func)(void *);
 
     //copy files to the tmp folder
-    //folder: /data/data/<APP_ID>/tmp/hxo/
+    //folder: /data/data/<APP_ID>/cache/hxo/
     if (mkdir(new_hxo_dir, 0777) == -1)
     {
         if(errno != EEXIST)
@@ -462,7 +470,7 @@ int out_fd = 0;
         }
     }
 
-    char new_filename[2048];
+    char new_filename[HXO_MAX_PATH_LEN];
     for (int i = 0; i < count; i++)
     {
         dircat(current_filename, entParam->hxo_dir, files[i]);

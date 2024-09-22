@@ -25,10 +25,11 @@
     #define _LOG_DIR DEFAULT_ANDROID_APPPATH                           //Where hxo_log.txt file will be stored
     //#define DEFAULT_INI_DIR "/storage/emulated/0/hxo/"                //where HXO.ini will be stored
     #define DEFAULT_LIB_DIR "/storage/emulated/0/hxo/"                //Where hxo_loader.so is placed
-    
-    int __attribute__((visibility("hidden"))) getAppID(char *_ID);    //Fetches app id eg:<com.example.app>
-    int __attribute__((visibility("hidden"))) LogOutput();            //Starts the logging
 #else
     //in case of non-android systems
     #define DEFAULT_LIB_DIR "/usr/lib"
 #endif //__ANDROID__
+
+#define MAX_LIBS 100                //Set maximum num of hxo file injectable
+#define HXO_MAX_PATH_LEN 4096           //Set maximum absolute path length
+#define HXO_MAX_FILE_LEN 512            //Set maximum file name length
