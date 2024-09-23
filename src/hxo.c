@@ -71,13 +71,15 @@ struct AndroidParam
 
 struct HXOParam {
     const char *hxo_version; //The hxo version string
-    int PID;
-    char *moduleName;        //The hxo module's file name 
-    char *baseName;      //Containing the elf executable name
-                             //or, In case of Android: The APP ID
-    char *basePath;         //elf executable path
-    char *modulePath;       //the hxo module's absolute path
+    int32_t PID;             //PID of current process
+    char *baseName;          //Containing the elf executable name
+                        //or, In case of Android: The APP ID
+
+    char *basePath;          //elf executable path
+    char *moduleName;        //The hxo module's file name
+    char *modulePath;        //the hxo module's absolute path
 };
+
 /*
 ;INI struct
 [HXO]
@@ -400,7 +402,7 @@ int out_fd = 0;
         fflush(stderr);
         close(out_fd);
     #endif
-        return (void*)1;
+        return (void*)2;
     }
 
 #ifndef CPRS_SHOW_ALWAYS
