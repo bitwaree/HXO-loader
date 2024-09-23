@@ -31,7 +31,9 @@
 #include "ini.h"
 #include "utils.h"
 #include "config.h"
-// Defined constants
+
+
+#define FILE_EXT ".hxo"
 
 struct iniParam
 {
@@ -49,10 +51,12 @@ struct iniParam
 
 struct internalParam
 {
+    int PID;
+    char exename[HXO_MAX_FILE_LEN];   //Name of the elf executable
     char exedir[HXO_MAX_PATH_LEN];    //(Absolute path) Where elf executable stays
     char cwd[HXO_MAX_PATH_LEN];       //(Absolute path) Where elf was executed
     char ini_dir[HXO_MAX_PATH_LEN];   //(Absolute path) Where INI file was loaded (parent directory for hxo_dir) (Absolute Path)
-    char iniFile[HXO_MAX_PATH_LEN];   //(Absolute path) Path of iniFile 
+    char iniFile[HXO_MAX_FILE_LEN];   //(Absolute path) Path of iniFile 
     char hxo_dir[HXO_MAX_PATH_LEN];   //(Absolute path) Where .hxo files lives 
 };
 
@@ -65,14 +69,14 @@ struct AndroidParam
 };
 #endif
 
-#define FILE_EXT ".hxo"
 struct HXOParam {
     const char *hxo_version; //The hxo version string
+    int PID;
     char *moduleName;        //The hxo module's file name 
-    char baseName[512];      //Containing the elf executable name
+    char *baseName;      //Containing the elf executable name
                              //or, In case of Android: The APP ID
-    char basePath[4096];         //elf executable path
-    char modulePath[4096];       //the hxo module's absolute path
+    char *basePath;         //elf executable path
+    char *modulePath;       //the hxo module's absolute path
 };
 /*
 ;INI struct
@@ -112,8 +116,13 @@ int __attribute__((visibility("hidden"))) fn_ini_handler(void *user, const char 
         //HXO configs
         if(!strcmp(name, "hxo"))
             cf->Enable = atoi(value);
-        if(!strcmp(name, "hxo_dir"))
-            strcpy(cf->hxo_dir, value);
+        if(!strcmp(name, "hxo_dir")) {
+            if(strlen(value) < HXO_MAX_PATH_LEN) {
+                strcpy(cf->hxo_dir, value);
+            } else {
+                fprintf(stderr, "[!] Error at ini parsing....too long path\n");
+            }
+        }
         if(!strcmp(name, "sleep"))
             cf->sleep = atoi(value);
         if(!strcmp(name, "UnloadAfterExecution"))
@@ -122,10 +131,15 @@ int __attribute__((visibility("hidden"))) fn_ini_handler(void *user, const char 
     else if(!strcmp(section, "1337"))
     {
         //extra hacks
-        if(!strcmp(name, "EP"))
+        if(!strcmp(name, "EP") && (strlen(value) < 256))
             strcpy(cf->ep, value);
-        if(!strcmp(name, "lib"))
-            strcpy(cf->dl_dir, value);
+        if(!strcmp(name, "lib")) {
+            if(strlen(value) < HXO_MAX_FILE_LEN) {
+                strcpy(cf->dl_dir, value);
+            } else {
+                fprintf(stderr, "[!] Error at ini parsing....too long path\n");
+            }
+        }
     }
     else if(!strcmp(section, "MISC"))
     {
@@ -173,15 +187,15 @@ int out_fd = 0;
     confparam->hideBanner = 0;
     confparam->hideCPRstring = 0;
 
-
+    entParam->PID = GetPID();
     // fetch current working directory
     if (getcwd(entParam->cwd, HXO_MAX_PATH_LEN) == NULL) 
     {
         perror("[!] WARNING: Can't retrive current working directory!");
         *entParam->cwd = (unsigned char) 0;
     }
-    //fetch exe path
-    if(!GetExePath(entParam->exedir))
+    //fetch exe path and name
+    if(!GetExePath(entParam->exedir, entParam->exename))
     {
         perror("[X] ERROR: Can't retrive current executable path! \n");
         *entParam->exedir = (unsigned char) 0;
@@ -242,7 +256,7 @@ int out_fd = 0;
     {
         free(entParam);
         free(confparam);
-        return (void*)1;
+        return (void*)2;
     }
     //setup parameters
     dircat(entParam->hxo_dir, entParam->ini_dir, confparam->hxo_dir);
@@ -286,9 +300,11 @@ int out_fd = 0;
 
     closedir(dir);
 
+    //Setup parameters for loading
     char current_filename[HXO_MAX_PATH_LEN];
-    void *dlhandle;
-    void *(*init_func)(void *);
+    struct HXOParam *dl_init_Param = malloc(sizeof(struct HXOParam));
+    memset(dl_init_Param, 0, sizeof(struct HXOParam));
+
 #else //IN CASE OF ANDROID
     //Read Config
     struct internalParam *entParam = malloc(sizeof(struct internalParam));
@@ -303,6 +319,7 @@ int out_fd = 0;
     confparam->hideBanner = 0;
     confparam->hideCPRstring = 0;
 
+    entParam->PID = GetPID();
     //in case of android
     struct AndroidParam *androidParam = malloc(sizeof(struct AndroidParam));
 
@@ -442,8 +459,7 @@ int out_fd = 0;
 
     // proceed to copy files to the rootDataPath/cache/hxo/
     char current_filename[HXO_MAX_PATH_LEN];
-    void *dlhandle;
-    void *(*init_func)(void *);
+    char new_filename[HXO_MAX_PATH_LEN];
 
     //copy files to the tmp folder
     //folder: /data/data/<APP_ID>/cache/hxo/
@@ -470,7 +486,6 @@ int out_fd = 0;
         }
     }
 
-    char new_filename[HXO_MAX_PATH_LEN];
     for (int i = 0; i < count; i++)
     {
         dircat(current_filename, entParam->hxo_dir, files[i]);
@@ -494,7 +509,12 @@ int out_fd = 0;
             return (void*)1;
         }
     }
+    //Setup parameters for loading
+    char *old_hxo_dir = strdup(entParam->hxo_dir);
     strcpy(entParam->hxo_dir, new_hxo_dir);
+    struct HXOParam *dl_init_Param = malloc(sizeof(struct HXOParam));
+    memset(dl_init_Param, 0, sizeof(struct HXOParam));
+
 #endif //__ANDROID__
 
     if(confparam->sleep > 0)
@@ -503,12 +523,37 @@ int out_fd = 0;
         sleep(confparam->sleep);
     }
     // load one by one and call their perticular entrypoint void* _init_hxo(void*)
-    // char current_filename[2048];
-    // void *dlhandle;
-    // void *(*init_func)(void *);
+    
+    void *dlhandle;
+    void *(*init_func)(struct HXOParam*);
 
     for (int i = 0; i < count; i++)
     {
+
+        //Clean Previous parameters
+        if((bool) (dl_init_Param->baseName || dl_init_Param->basePath || dl_init_Param->modulePath)) {
+            free(dl_init_Param->baseName);
+            free(dl_init_Param->basePath);
+            free(dl_init_Param->modulePath);
+        }
+        //Setup parameter
+        dl_init_Param->hxo_version = VER_STR;
+        dl_init_Param->moduleName = files[i];
+        dl_init_Param->PID = entParam->PID;
+
+    #if !defined(__ANDROID__) || defined(__STD_UNIX___)
+        //On standard OS... (unix/linux, excluding android)
+        dl_init_Param->baseName = strdup(entParam->exename);
+        dl_init_Param->basePath = strdup(entParam->exedir);
+        dl_init_Param->modulePath = strdup(entParam->hxo_dir);
+    #else
+        //On android
+        dl_init_Param->baseName = strdup(androidParam->ID);
+        dl_init_Param->basePath = strdup(androidParam->AndroidDataPath);
+        dl_init_Param->modulePath = strdup(old_hxo_dir);
+
+    #endif
+
         dlhandle = NULL;
         // Load the shared object file
         dircat(current_filename, entParam->hxo_dir, files[i]);
@@ -528,8 +573,9 @@ int out_fd = 0;
             continue;
         }
 
+
         // Call the _init_hxo function
-        void *result = init_func(NULL);
+        void *result = init_func(dl_init_Param);
         //If a non-zero value returned...
         if((intptr_t)result != 0)
         {
@@ -558,8 +604,14 @@ int out_fd = 0;
     }
     free(confparam);
     free(entParam);
+
+    free(dl_init_Param->baseName);
+    free(dl_init_Param->basePath);
+    free(dl_init_Param->modulePath);
+    free(dl_init_Param);
 #ifdef __ANDROID__
     free(androidParam);
+    free(old_hxo_dir);
 #ifdef _DEBUG_LOG
     fflush(stdout);
     fflush(stderr);

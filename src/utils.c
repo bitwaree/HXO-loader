@@ -28,7 +28,7 @@
     #include <sys/sysctl.h>
 #endif
 
-int __attribute__((visibility("hidden"))) GetExePath(char *directory)
+int __attribute__((visibility("hidden"))) GetExePath(char *directory, char *exename)
 {
 #ifdef __bsd__
     //exe path fetch for BSD
@@ -46,11 +46,30 @@ int __attribute__((visibility("hidden"))) GetExePath(char *directory)
         //perror("sysctl");
         return 0;
     }
+    /*
+    char *exe_name;
+    exe_name = getprogname();
+    strcpy(exename, exe_name);
+    */
+    pid_t pid = getpid(); // Get the current process ID
+    struct kinfo_proc proc_info;
+    size_t size = sizeof(proc_info);
+
+    // Use sysctl to get process information
+    if (sysctl((int[]){ CTL_KERN, KERN_PROC, KERN_PROC_ALL, pid }, 4, &proc_info, &size, NULL, 0) == -1) {
+        perror("sysctl");
+    }
+
+    // Print the executable name
+    //printf("Executable name: %s\n", proc_info.kp_proc.p_comm);
+    memcpy(exename, proc_info.kp_proc.p_comm);
+
 #else
-    //exe path fetch for linux
+    //exe path fetch for linux based systems
     static const uint MAX_LENGTH = HXO_MAX_PATH_LEN;
     char *exepath = (char *)malloc(MAX_LENGTH);
     char *dir;
+    char *exe_name;
     ssize_t len = readlink("/proc/self/exe", exepath, MAX_LENGTH - 1);
     if (len != -1)
     {
@@ -63,6 +82,8 @@ int __attribute__((visibility("hidden"))) GetExePath(char *directory)
         directory[dirlen] = '/';
         directory[dirlen + 1] = '\0';
         dirlen++;
+        exe_name = basename(exepath);
+        strcpy(exename, exe_name);
     }
     else
     {
@@ -73,6 +94,11 @@ int __attribute__((visibility("hidden"))) GetExePath(char *directory)
     free(exepath);
 #endif
     return 1;
+}
+
+int __attribute__((visibility("hidden"))) GetPID()
+{
+    return (int) getpid();
 }
 
 void __attribute__((visibility("hidden"))) fixDIR(char *Dir)
