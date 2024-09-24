@@ -303,7 +303,7 @@ int out_fd = 0;
     closedir(dir);
 
     //Setup parameters for loading
-    char current_filename[HXO_MAX_PATH_LEN];
+    char *current_filename = malloc(HXO_MAX_PATH_LEN);
     struct HXOParam *dl_init_Param = malloc(sizeof(struct HXOParam));
     memset(dl_init_Param, 0, sizeof(struct HXOParam));
 
@@ -416,7 +416,7 @@ int out_fd = 0;
     //setup parameters
     //HXO Priority of searching for 
     dircat(entParam->hxo_dir, androidParam->AndroidDataPath, confparam->hxo_dir);
-    char new_hxo_dir[1024];
+    char *new_hxo_dir = malloc(1024);
     dircat(new_hxo_dir, androidParam->rootDataPath, "cache/hxo/");
     //Add a slash to avoid directory issues
     fixDIR(entParam->hxo_dir);
@@ -436,6 +436,7 @@ int out_fd = 0;
         free(entParam);
         free(confparam);
         free(androidParam);
+        free(new_hxo_dir);
     #ifdef _DEBUG_LOG
         fflush(stdout);
         fflush(stderr);
@@ -460,8 +461,8 @@ int out_fd = 0;
     closedir(dir);
 
     // proceed to copy files to the rootDataPath/cache/hxo/
-    char current_filename[HXO_MAX_PATH_LEN];
-    char new_filename[HXO_MAX_PATH_LEN];
+    char *current_filename = malloc(HXO_MAX_PATH_LEN);
+    char *new_filename = malloc(HXO_MAX_PATH_LEN);
 
     //copy files to the tmp folder
     //folder: /data/data/<APP_ID>/cache/hxo/
@@ -478,6 +479,9 @@ int out_fd = 0;
             free(confparam);
             free(entParam);
             free(androidParam);
+            free(new_hxo_dir);
+            free(current_filename);
+            free(new_filename);
         // exit
         #ifdef _DEBUG_LOG
             fflush(stdout);
@@ -502,6 +506,9 @@ int out_fd = 0;
             free(confparam);
             free(entParam);
             free(androidParam);
+            free(new_hxo_dir);
+            free(current_filename);
+            free(new_filename);
         // exit
         #ifdef _DEBUG_LOG
             fflush(stdout);
@@ -511,9 +518,13 @@ int out_fd = 0;
             return (void*)1;
         }
     }
-    //Setup parameters for loading
+    //Setup parameters for loading modules
     char *old_hxo_dir = strdup(entParam->hxo_dir);
     strcpy(entParam->hxo_dir, new_hxo_dir);
+    //free up some unused memory
+    free(new_hxo_dir);
+    free(new_filename);
+    //allocate the HXOParam struct
     struct HXOParam *dl_init_Param = malloc(sizeof(struct HXOParam));
     memset(dl_init_Param, 0, sizeof(struct HXOParam));
 
@@ -604,13 +615,15 @@ int out_fd = 0;
     {
         free(files[i]);
     }
-    free(confparam);
     free(entParam);
+    free(confparam);
+    free(current_filename);
 
     free(dl_init_Param->baseName);
     free(dl_init_Param->basePath);
     free(dl_init_Param->modulePath);
     free(dl_init_Param);
+
 #ifdef __ANDROID__
     free(androidParam);
     free(old_hxo_dir);
