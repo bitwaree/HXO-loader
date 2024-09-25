@@ -33,57 +33,57 @@ int __attribute__((visibility("hidden"))) GetExePath(char *directory, char *exen
 #ifdef __bsd__
     //exe path fetch for BSD
     size_t path_size = HXO_MAX_PATH_LEN; //default size of directory struct
+    char *exepath = (char *)malloc(path_size);
+    char *exepath_dup;
     int mib[4];
 
     // Define the MIB array for fetching the executable path
     mib[0] = CTL_KERN;
     mib[1] = KERN_PROC;
     mib[2] = KERN_PROC_PATHNAME;
-    mib[3] = getpid();
+    mib[3] = -1;
 
     // Retrieve the executable path
-    if (sysctl(mib, 4, directory, &path_size, NULL, 0) == -1) {
+    if (sysctl(mib, 4, exepath, &path_size, NULL, 0) == -1) {
         //perror("sysctl");
+        free(exepath);
         return 0;
     }
+    exepath_dup = strdup(exepath);
+    char *_directory = dirname(exepath);    //dump the directory
+    char *_exename = basename(exepath_dup); //dump the exe name
+
+    strcpy(directory, _directory);
+    strcpy(exename, _exename);
+
+    free(exepath);
+    free(exepath_dup);
     /*
     char *exe_name;
     exe_name = getprogname();
     strcpy(exename, exe_name);
     */
-    pid_t pid = getpid(); // Get the current process ID
-    struct kinfo_proc proc_info;
-    size_t size = sizeof(proc_info);
-
-    // Use sysctl to get process information
-    if (sysctl((int[]){ CTL_KERN, KERN_PROC, KERN_PROC_ALL, pid }, 4, &proc_info, &size, NULL, 0) == -1) {
-        perror("sysctl");
-    }
-
-    // Print the executable name
-    //printf("Executable name: %s\n", proc_info.kp_proc.p_comm);
-    memcpy(exename, proc_info.kp_proc.p_comm);
 
 #else
     //exe path fetch for linux based systems
     static const uint MAX_LENGTH = HXO_MAX_PATH_LEN;
     char *exepath = (char *)malloc(MAX_LENGTH);
-    char *dir;
-    char *exe_name;
+    char *exepath_dup;
+    char *_directory;
+    char *_exename;
     ssize_t len = readlink("/proc/self/exe", exepath, MAX_LENGTH - 1);
     if (len != -1)
     {
         exepath[len] = '\0';
-        // printf("exe path: %s\n", exepath);
-        dir = dirname(exepath);
-        // printf("Current directory: %s\n", dir);
-        strcpy(directory, dir);
-        size_t dirlen = strlen(dir);
+        exepath_dup = strdup(exepath);
+        _directory = dirname(exepath);
+        strcpy(directory, _directory);
+        size_t dirlen = strlen(_directory);
         directory[dirlen] = '/';
         directory[dirlen + 1] = '\0';
         dirlen++;
-        exe_name = basename(exepath);
-        strcpy(exename, exe_name);
+        _exename = basename(exepath_dup);
+        strcpy(exename, _exename);
     }
     else
     {
@@ -92,6 +92,7 @@ int __attribute__((visibility("hidden"))) GetExePath(char *directory, char *exen
         return 0;
     }
     free(exepath);
+    free(exepath_dup);
 #endif
     return 1;
 }

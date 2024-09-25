@@ -544,7 +544,7 @@ int out_fd = 0;
     {
 
         //Clean Previous parameters
-        if((bool) (dl_init_Param->baseName || dl_init_Param->basePath || dl_init_Param->modulePath)) {
+        if(i != 0) {
             free(dl_init_Param->baseName);
             free(dl_init_Param->basePath);
             free(dl_init_Param->modulePath);
