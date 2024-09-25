@@ -12,9 +12,12 @@ struct HXOParam {
     char *modulePath;        //the hxo module's absolute path
 };
 
+//Function APIs and types
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
+#define HXO_THREAD_FUNCTION void *(*) (void*)
 inline int hxo_cmpversion(const char *current_version, const char *needed_version) {
     int v1_major, v1_minor, v1_patch;
     int v2_major, v2_minor, v2_patch;
@@ -37,4 +40,10 @@ inline int hxo_cmpversion(const char *current_version, const char *needed_versio
 
     // Versions are equal
     return 0;
+}
+
+inline int hxo_createthread(void *(*start_routine) (void *), void *arg)
+{
+    pthread_t thr = 0;
+    return pthread_create(&thr, 0, start_routine, arg);
 }
