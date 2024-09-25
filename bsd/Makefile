@@ -33,6 +33,7 @@ install:
 	@ #copy include file
 	cp ../include/hxo-user.h $(PREFIX)/include/hxo-user.h
 	@ #copy man pages
+	mkdir -p $(PREFIX)/local/man/man1/ $(PREFIX)/local/man/man3/
 	cp ../man/hxo*.1 $(PREFIX)/local/man/man1/
 	cp ../man/hxo*.3 $(PREFIX)/local/man/man3/
 	@ echo "\nHXO-loader-v$(VERSION): Successfully installed ..."
