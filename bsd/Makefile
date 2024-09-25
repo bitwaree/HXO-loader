@@ -30,6 +30,11 @@ install:
 	cp ../scripts.sh/hxo-rmpatch $(PREFIX)/bin/hxo-rmpatch
 	cp ../scripts.sh/hxo-run $(PREFIX)/bin/hxo-run
 	chmod +x $(PREFIX)/bin/hxo-patch $(PREFIX)/bin/hxo-rmpatch $(PREFIX)/bin/hxo-run
+	@ #copy include file
+	cp ../include/hxo-user.h $(PREFIX)/include/hxo-user.h
+	@ #copy man pages
+	cp ../man/hxo*.1 $(PREFIX)/local/man/man1/
+	cp ../man/hxo*.3 $(PREFIX)/local/man/man3/
 	@ echo "\nHXO-loader-v$(VERSION): Successfully installed ..."
 
 uninstall:
@@ -40,7 +45,11 @@ uninstall:
 	fi
 	rm $(PREFIX)/lib/$(LIBNAME)
 	rm $(PREFIX)/bin/hxo-patch $(PREFIX)/bin/hxo-rmpatch $(PREFIX)/bin/hxo-run
+	rm $(PREFIX)/local/man/man1/hxo* $(PREFIX)/local/man/man3/hxo*
+	rm $(PREFIX)/include/hxo-user.h
 	@ echo "\nSuccessfully uninstalled ..."
+
+
 clean:
 	@ rm -v *.o ../lib/*
 
