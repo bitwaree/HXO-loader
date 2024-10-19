@@ -35,21 +35,21 @@ Hybrid Xpl0it loader (HXO-loader) is an exclusive tool/framework for auto-inject
 3. **Create a directory and place your .hxo hacks.**
 
     ```bash
-    mkdir scripts
+    mkdir modules
     ```
-    NOTE: `"scripts"` is the default folder name, but it can be changed by modifying `"HXO.ini"`
+    NOTE: `"modules"` is the default folder name, but it can be changed by modifying `"HXO.ini"`
 
     ```
-    cp <module1.hxo> <module2.hxo> <module3.hxo> ./scripts/
+    cp <module1.hxo> <module2.hxo> <module3.hxo> ./modules/
     ```
 
     Make sure your modules have a `.hxo` filename extention,(if not: do it manually) to make it recognisable.
 
     ```
     #  So it will look like ...
-    #./scripts/module1.so -> ./scripts/module1.hxo 
-    #./scripts/module2.so -> ./scripts/module2.hxo 
-    #./scripts/module3.so -> ./scripts/module3.hxo 
+    #./modules/module1.so -> ./modules/module1.hxo 
+    #./modules/module2.so -> ./modules/module2.hxo 
+    #./modules/module3.so -> ./modules/module3.hxo 
     ```
 
 4. **Finally run the game using `hxo-run` or `hxo-patch`**
@@ -71,7 +71,7 @@ Hybrid Xpl0it loader (HXO-loader) is an exclusive tool/framework for auto-inject
       ├── game.elf
       ├── game.elf.bak
       ├── HXO.ini
-      ├── scripts
+      ├── modules
       │   ├── hack1.hxo
       │   └── hack2.hxo
       └──...

@@ -7,7 +7,7 @@ This page documents all the things you need to know to create HXO-loaded apks.
 
 - Android uses different approach when it comes about process handling. So, using techniques like `LD_PRELOAD` is almost impossible.
 - For android no general script to do the work for you must have a little idea about what you are doing if you are the modder.
-- Android applications need explicit permission to access the internal storage, so HXO stores all the required files at `/storage/emulated/0/Android/media/<APP_ID>/` directory. _(Unlike other versions, there is no elf executable directory to place the `HXO.ini` and `scripts` folder, so hxo uses the above path for basically everything.)_
+- Android applications need explicit permission to access the internal storage, so HXO stores all the required files at `/storage/emulated/0/Android/media/<APP_ID>/` directory. _(Unlike other versions, there is no elf executable directory to place the `HXO.ini` and `modules` folder, so hxo uses the above path for basically everything.)_
 - As android doesn't have a typical console, for debugging HXO-loader redirects `stdout` and `stderr` handles into a log file (`hxo_log.txt`). So one can open the log file after a run to understand if something went wrong with the `.hxo` hacks *(or, in worst case scenario with HXO-loader itself >_< )*.
 - On Android it's impossible to install HXO-loader as a package, so HXO-loader must be embedded inside the apk itself.
 - Android doesn't extract native libraries which don't have a `"lib"` prefix, so unlike other systems android's hxo has a name `"libhxo.so"` instead of `"hxo_loader.so"`. _(The name `"libhxo.so"` might get standardized for all platforms in future.)_
@@ -148,17 +148,17 @@ These steps should be followed by the installer of the apk. You can use any file
 
 #### 4. Create a directory to place your `.hxo` hacks.
 ```bash
-  mkdir scripts
+  mkdir modules
 ```
-NOTE: `scripts` is the default folder name, but it can be changed by modifying `HXO.ini`
+NOTE: `modules` is the default folder name, but it can be changed by modifying `HXO.ini`
 
-#### 5: Now copy your hxo modules _(`.hxo` filename extension)_ in the scripts directory.
+#### 5: Now copy your hxo modules _(`.hxo` filename extension)_ in the `modules` directory.
 
 #### *So the tree should look something like this:*
 ```tree
 /storage/emulated/0/Android/media/<APP_ID>
 ├── HXO.ini
-├── scripts
+├── modules
 │   ├── hack1.hxo
 │   ├── hack2.hxo
 │   └── ***.hxo

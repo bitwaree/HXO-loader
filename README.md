@@ -80,18 +80,18 @@ But to achieve this, one has to modify the apk/xapk itself. The detailed instruc
 
 3. **Create a directory and place your .hxo hacks.**
     ```bash
-    mkdir scripts
+    mkdir modules
     ```
-    NOTE: `scripts` is the default folder name, but it can be changed by modifying `HXO.ini`
+    NOTE: `modules` is the default folder name, but it can be changed by modifying `HXO.ini`
     ```
-    cp <module1.so> <module2.so> <module3.so> ./scripts/
+    cp <module1.so> <module2.so> <module3.so> ./modules/
     ```
     Now make sure your modules have a `.hxo` filename extention,(if not: do it manually) to make it recognisable.
     ```
     #  So it will look like ...
-    #./scripts/module1.so -> ./scripts/module1.hxo 
-    #./scripts/module2.so -> ./scripts/module2.hxo 
-    #./scripts/module3.so -> ./scripts/module3.hxo 
+    #./modules/module1.so -> ./modules/module1.hxo 
+    #./modules/module2.so -> ./modules/module2.hxo 
+    #./modules/module3.so -> ./modules/module3.hxo 
     ```
 
 
@@ -111,7 +111,7 @@ ___So the tree should look something like this:___
     ├── game.elf
     ├── game.elf.bak
     ├── HXO.ini
-    ├── scripts
+    ├── modules
     │   ├── hack1.hxo
     │   └── hack2.hxo
     └──...

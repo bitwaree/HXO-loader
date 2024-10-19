@@ -51,16 +51,16 @@ directory.
 .IP
 .nf
 \f[C]
-mkdir scripts
+mkdir modules
 \f[R]
 .fi
 .PP
-NOTE: \f[C]\[dq]scripts\[dq]\f[R] is the default folder name, but it can
+NOTE: \f[C]\[dq]modules\[dq]\f[R] is the default folder name, but it can
 be changed by modifying \f[C]\[dq]HXO.ini\[dq]\f[R]
 .IP
 .nf
 \f[C]
-cp <module1.hxo> <module2.hxo> <module3.hxo> ./scripts/
+cp <module1.hxo> <module2.hxo> <module3.hxo> ./modules/
 \f[R]
 .fi
 .PP
@@ -70,9 +70,9 @@ do it manually) to make it recognisable.
 .nf
 \f[C]
 #  So it will look like ...
-#./scripts/module1.so -> ./scripts/module1.hxo 
-#./scripts/module2.so -> ./scripts/module2.hxo 
-#./scripts/module3.so -> ./scripts/module3.hxo 
+#./modules/module1.so -> ./modules/module1.hxo 
+#./modules/module2.so -> ./modules/module2.hxo 
+#./modules/module3.so -> ./modules/module3.hxo 
 \f[R]
 .fi
 .RE
@@ -112,7 +112,7 @@ hxo-patch <elf-executable>
   \[u251C]\[u2500]\[u2500] game.elf
   \[u251C]\[u2500]\[u2500] game.elf.bak
   \[u251C]\[u2500]\[u2500] HXO.ini
-  \[u251C]\[u2500]\[u2500] scripts
+  \[u251C]\[u2500]\[u2500] modules
   \[br]   \[u251C]\[u2500]\[u2500] hack1.hxo
   \[br]   \[u2514]\[u2500]\[u2500] hack2.hxo
   \[u2514]\[u2500]\[u2500]...

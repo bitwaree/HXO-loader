@@ -14,7 +14,7 @@
 
 //config.h: tweakble configs
 
-#define DEFAULT_HXO_DIR "./scripts/"
+#define DEFAULT_HXO_DIR "./modules/"
 //#define DEFAULT_LIB_DIR "/usr/lib"
 #define CONFIGFILE "HXO.ini"
 
