@@ -14,14 +14,15 @@ build:
 	@ echo "CC *.c ->>> *.o"
 	@ $(CC) -s -o ../lib/$(LIBNAME) *.o -shared $(LDFLAGS) -lpthread
 	@ echo "LD *.o ->>> ../lib/$(LIBNAME)"
-	@ echo "\nBuild Successful ....\nRun \"sudo make install\" to Install HXO-loader-v$(VERSION)"
+	@ echo "Build Successful ...."
+	@ echo "Run \"sudo make install\" to Install HXO-loader-v$(VERSION)"
 
 
 install:
 	@ #check if it's already build or not
 	@if [ ! -e ../lib/$(LIBNAME) ]; then \
-		echo "\nERROR: HXO-loader isn't compiled and built at first place!!"; \
-		echo "Run \"make\" then re-run \"make install\" for a successful installation.\n"; \
+		echo "ERROR: HXO-loader isn't compiled and built at first place!!"; \
+		echo "Run \"make\" then re-run \"make install\" for a successful installation."; \
 		exit 1; \
 	fi
 	@ #proceed to the installation process ..
@@ -36,7 +37,7 @@ install:
 	mkdir -p $(PREFIX)/local/man/man1/ $(PREFIX)/local/man/man3/
 	cp ../man/hxo*.1 $(PREFIX)/local/man/man1/
 	cp ../man/hxo*.3 $(PREFIX)/local/man/man3/
-	@ echo "\nHXO-loader-v$(VERSION): Successfully installed ..."
+	@ echo "HXO-loader-v$(VERSION): Successfully installed ..."
 
 uninstall:
 	@ #check if it's already installed or not
@@ -48,7 +49,7 @@ uninstall:
 	rm $(PREFIX)/bin/hxo-patch $(PREFIX)/bin/hxo-rmpatch $(PREFIX)/bin/hxo-run
 	rm $(PREFIX)/local/man/man1/hxo* $(PREFIX)/local/man/man3/hxo*
 	rm $(PREFIX)/include/hxo-user.h
-	@ echo "\nSuccessfully uninstalled ..."
+	@ echo "Successfully uninstalled ..."
 
 
 clean:
