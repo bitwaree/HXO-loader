@@ -45,12 +45,6 @@ Hybrid Xpl0it loader (HXO-loader) is an exclusive tool/framework for auto-inject
 
     Make sure your modules have a `.hxo` filename extention,(if not: do it manually) to make it recognisable.
 
-    ```
-    #  So it will look like ...
-    #./modules/module1.so -> ./modules/module1.hxo 
-    #./modules/module2.so -> ./modules/module2.hxo 
-    #./modules/module3.so -> ./modules/module3.hxo 
-    ```
 
 4. **Finally run the game using `hxo-run` or `hxo-patch`**
     - For a test/temporary run (recommended for testing):
@@ -91,8 +85,7 @@ Hybrid Xpl0it loader (HXO-loader) is an exclusive tool/framework for auto-inject
 # ACKNOWLEDGEMENTS
 
  - [INIh](https://github.com/benhoyt/inih), an awesome INI file parser by Ben Hoyt, used in this project for configuration parsing.
- - This entire project is distributed under the terms of [GPL-v3](https://www.gnu.org/licenses/quick-guide-gplv3.html).
-
+ - This project is distributed under the terms of the [GNU General Public License v3 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.en.html) alongside the [GNU Lesser General Public License v3 (LGPL-3.0)](https://www.gnu.org/licenses/lgpl-3.0.en.html).
 
 # DISTRIBUTION
 Please read https://github.com/bitwaree/HXO-loader/blob/master/DISTRIBUTION.md for additional info.

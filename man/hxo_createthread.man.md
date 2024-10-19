@@ -27,7 +27,7 @@ int hxo_createthread(void *(*start_routine) (void *), void *arg);
 #include <pthread.h>
 #define HXO_THREAD_FUNCTION void *(*) (void*)
 
-inline int hxo_createthread(void *(*start_routine) (void *), void *arg)
+static inline int hxo_createthread(void *(*start_routine) (void *), void *arg)
 {
     pthread_t thr = 0;
     return pthread_create(&thr, 0, start_routine, arg);

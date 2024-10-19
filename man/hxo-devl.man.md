@@ -63,7 +63,7 @@ This page demonstrates all necessary things to know to create Hybrid Xpl0it load
 
   \* As `size_t` is same as `void *`, using size_t as the return type can be helpful.
 
-- ***WARNING***: Here are a few things to keep in mind if you don't want to encounter a **seg-fault**:
+- ***WARNING***: Here are a few things to keep in mind if you want to avoid **seg-faults**:
 
     1. If a continuous loop_ processing in needed for a specific module, start a thread using `hxo_createthread`, **do not** create an infinite loop under the `_init_hxo` function, otherwise, HXO-loader will be frozen and other hxo modules will not get a chance of getting loaded. Always try to run the nessesary checks, initialization code and return a proper value without any `sleep` or delay.
     2. In case of **fetal error** _(return value -1)_, it must be made sure there is ***no thread running*** in that module. If a thread runs in the module while `_init_hxo` returns `-1`, it will cause a _segmentation fault_.
@@ -96,7 +96,7 @@ size_t _init_hxo(struct HXOParam *hxoParameter)  //HXO entrypoint
     }
 
     //Start a thread (if needed)
-    if(hxo_createthread((HXO_THREAD_FUNCTION) CppThreadFunction, NULL) != 0) {
+    if(hxo_createthread((HXO_THREAD_FUNCTION) ThreadFunction, NULL) != 0) {
         fprintf(stderr, "ERROR: Can't create thread.\n"); 
         return -1;
     }

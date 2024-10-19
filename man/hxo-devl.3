@@ -94,7 +94,7 @@ return type can be helpful.
 .RE
 .IP \[bu] 2
 \f[B]\f[BI]WARNING\f[B]\f[R]: Here are a few things to keep in mind if
-you don\[cq]t want to encounter a \f[B]seg-fault\f[R]:
+you want to avoid \f[B]seg-faults\f[R]:
 .RS 2
 .IP "1." 3
 If a continuous loop_ processing in needed for a specific module, start
@@ -150,7 +150,7 @@ size_t _init_hxo(struct HXOParam *hxoParameter)  //HXO entrypoint
     }
 
     //Start a thread (if needed)
-    if(hxo_createthread((HXO_THREAD_FUNCTION) CppThreadFunction, NULL) != 0) {
+    if(hxo_createthread((HXO_THREAD_FUNCTION) ThreadFunction, NULL) != 0) {
         fprintf(stderr, \[dq]ERROR: Can\[aq]t create thread.\[rs]n\[dq]); 
         return -1;
     }

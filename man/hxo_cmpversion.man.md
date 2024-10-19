@@ -10,7 +10,7 @@ hxo_cmpversion -- compares two semantic versions.
 ```C
 #include <hxo-user.h>              //Contains all the definitions needed to get started
 
-inline int hxo_cmpversion(const char *current_version, const char *needed_version);
+int hxo_cmpversion(const char *current_version, const char *needed_version);
 ```
 
 # DESCRIPTION
@@ -31,7 +31,7 @@ inline int hxo_cmpversion(const char *current_version, const char *needed_versio
 ```C
 #include <stdio.h>
 
-inline int hxo_cmpversion(const char *current_version, const char *needed_version) {
+static inline int hxo_cmpversion(const char *current_version, const char *needed_version) {
     int v1_major, v1_minor, v1_patch;
     int v2_major, v2_minor, v2_patch;
 
