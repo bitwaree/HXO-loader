@@ -8,7 +8,7 @@ This page documents all the things you need to know to create HXO-loaded apks.
 - Android uses different approach when it comes about process handling. So, using techniques like `LD_PRELOAD` is almost impossible.
 - For android no general script to do the work for you must have a little idea about what you are doing if you are the modder.
 - Android applications need explicit permission to access the internal storage, so HXO stores all the required files at `/storage/emulated/0/Android/media/<APP_ID>/` directory. _(Unlike other versions, there is no elf executable directory to place the `HXO.ini` and `modules` folder, so hxo uses the above path for basically everything.)_
-- As android doesn't have a typical console, for debugging HXO-loader redirects `stdout` and `stderr` handles into a log file (`hxo_log.txt`). So one can open the log file after a run to understand if something went wrong with the `.hxo` hacks *(or, in worst case scenario with HXO-loader itself >_< )*.
+- As android doesn't have a typical console, for debugging HXO-loader redirects `stdout` and `stderr` handles into a log file (`hxo_log.txt`). So one can open the log file after a run to understand if something went wrong with the `.hxo` hacks *(or, in worst case scenario with HXO-loader itself)*.
 - On Android it's impossible to install HXO-loader as a package, so HXO-loader must be embedded inside the apk itself.
 - Android doesn't extract native libraries which don't have a `"lib"` prefix, so unlike other systems android's hxo has a name `"libhxo.so"` instead of `"hxo_loader.so"`. _(The name `"libhxo.so"` might get standardized for all platforms in future.)_
 
@@ -18,11 +18,11 @@ Now as we got the basic difference covered, next we will try to understand the b
 ## How does it work?
 
 #### In an **APK** package there are:
-1. Compiled Java Dex files, 
-3. ___*Native Libs___,
-3. Resources.
+1. Compiled Java bytecode (Dex files),
+3. ___Native Libs (SO files)___,
+3. Resources and other files.
 
-And we are interested in the __*Native Libs__ here. Those can be found at `<package.apk>/lib/<arch>/...` _(<arch> is the corresponding architecture.)_
+And we are interested in the __Native Libs__ here. Those can be found at `<package.apk>/lib/<arch>/...` _(<arch> is the corresponding architecture.)_
 
 #### The Idea:
 We are going to choose a library inside of the _native lib directory_ and add a dependency to `libhxo.so` using `patchelf`. Next, we are going to put a copy of `"libhxo.so"` in that directory. This way when we run the app the library will tell the linker to load the `libhxo.so` first and HXO-loader will be initialized.
@@ -84,7 +84,7 @@ You can try building the HXO-loader-android from source using [Android-ndk](http
 Extract the zip, and copy the correct `libhxo.so` as per your directory architecture.
 
 ### Step 5: Repack the package
-As previously mentioned, it's always recommended to perform the step [3](#step-3-find-the-correct-lib-and-patch-it) and [4](#step-4-copy-libhxo.so-in-the-directory) for all of the available architectures. Once done we can proceed to the repacking step.
+As previously mentioned, it's always recommended to perform the step [3](#step-3-find-the-correct-lib-and-patch-it) and [4](#step-4-copy-libhxo.so-in-the-directory) for all of the available architectures. Once done, we can proceed to the repacking step.
 
 Come back to your parent workspace directory with `cd ../../..`. 
 
@@ -107,14 +107,18 @@ Use the following command to perform the zipallign:
   zipalign -v 4 <package-hxo-loaded.apk> <package-hxo-loaded-alligned.apk>
 ```
 
-Now the only step left is to sign the apk. This step can be skipped and can be done on android via some `apk-signing` tools. There are plenty of tools on Play Store. But if you want to do it:
-```bash
-  keytool -genkeypair -v -keystore ./test-debug.keystore -keyalg rsa -sigalg SHA256withRSA -alias test-debug -keysize 2048  -validity 10000
-  apksigner sign --ks ./test-debug.keystore --ks-key-alias test-debug <package-hxo-loaded-alligned.apk>
-```
+Now the only step left is to sign the apk. This step can be skipped and can be done on android via some `apk-signing` tools. There are plenty of tools on Play Store. But for manual signing the steps can be followed: 
+ - Create a keystore using:
+    ```bash
+    keytool -genkeypair -v -keystore ./test-debug.keystore -keyalg rsa -sigalg SHA256withRSA -alias test-debug -keysize 2048  -validity 10000
+    ```
 
-That's it... It's that simple. It might seem complicated but once you understand it, it's quite easy. ^.^
+ - Sign using the keystore:
+    ```bash
+    apksigner sign --ks ./test-debug.keystore --ks-key-alias test-debug <package-hxo-loaded-alligned.apk>
+    ```
 
+This is how an apk can be modified for hxo-loader to work.
 
 
 ## For XAPK/APKM files (split apks)
